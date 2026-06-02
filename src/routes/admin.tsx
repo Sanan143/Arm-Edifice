@@ -193,12 +193,13 @@ function AdminPage() {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        navigate({ to: "/login" });
-        return;
-      }
       try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        if (!data.session) {
+          navigate({ to: "/login" });
+          return;
+        }
         const { isAdmin } = await fetchIsAdmin();
         if (!mounted) return;
         if (!isAdmin) {
@@ -220,10 +221,14 @@ function AdminPage() {
         setAdminRequests(requests);
         setState("ready");
       } catch (e) {
+        console.error("Failed to load admin panel details:", e);
         toast.error(
           e instanceof Error ? e.message : "Failed to load admin panel"
         );
-        if (mounted) setState("denied");
+        if (mounted) {
+          // If we fail because of auth or initialization, let's redirect to login safely
+          navigate({ to: "/login" });
+        }
       }
     })();
     return () => {

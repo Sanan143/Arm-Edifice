@@ -20,7 +20,19 @@ function createSupabaseClient() {
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: {
-      storage: typeof window !== 'undefined' ? localStorage : undefined,
+      storage: (() => {
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            // Test storage access
+            window.localStorage.setItem('__storage_test__', 'test');
+            window.localStorage.removeItem('__storage_test__');
+            return window.localStorage;
+          }
+        } catch (e) {
+          console.warn('[Supabase Client] localStorage is inaccessible:', e);
+        }
+        return undefined;
+      })(),
       persistSession: true,
       autoRefreshToken: true,
     }
