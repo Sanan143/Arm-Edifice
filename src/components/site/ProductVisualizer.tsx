@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Check, ChevronDown, Instagram } from "lucide-react";
+import { Check, ChevronDown, Instagram, PanelTop, DoorClosed, Layers, Building2, Grid3x3 } from "lucide-react";
 import { ThreeVisualizer } from "./ThreeVisualizer";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -12,11 +12,36 @@ type ACPFinishId = "silver-metallic" | "brushed" | "copper" | "white-matt" | "ch
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 const PRODUCTS = [
-  { id: "window" as ProductId, label: "Aluminium Window", desc: "Sliding, casement & fixed systems" },
-  { id: "door" as ProductId, label: "Aluminium Door", desc: "Swing, folding & sliding doors" },
-  { id: "acp" as ProductId, label: "ACP Cladding", desc: "Aluminium composite panels" },
-  { id: "curtain-wall" as ProductId, label: "Curtain Wall", desc: "Structural glass facade systems" },
-  { id: "partition" as ProductId, label: "Glass Partition", desc: "Office & commercial partitions" },
+  {
+    id: "window" as ProductId,
+    label: "Aluminium Window",
+    desc: "Sliding, casement & fixed systems",
+    icon: PanelTop,
+  },
+  {
+    id: "door" as ProductId,
+    label: "Aluminium Door",
+    desc: "Swing, folding & sliding doors",
+    icon: DoorClosed,
+  },
+  {
+    id: "acp" as ProductId,
+    label: "ACP Cladding",
+    desc: "Aluminium composite panels",
+    icon: Layers,
+  },
+  {
+    id: "curtain-wall" as ProductId,
+    label: "Curtain Wall",
+    desc: "Structural glass facade systems",
+    icon: Building2,
+  },
+  {
+    id: "partition" as ProductId,
+    label: "Glass Partition",
+    desc: "Office & commercial partitions",
+    icon: Grid3x3,
+  },
 ];
 
 const FRAME_COLORS = [
@@ -28,11 +53,36 @@ const FRAME_COLORS = [
 ];
 
 const GLASS_TYPES = [
-  { id: "clear" as GlassTypeId, label: "Clear Glass", fill: "rgba(180,215,240,0.18)", stroke: "rgba(180,215,240,0.5)" },
-  { id: "blue-tint" as GlassTypeId, label: "Blue Tinted", fill: "rgba(37,99,235,0.32)", stroke: "rgba(96,165,250,0.5)" },
-  { id: "bronze-tint" as GlassTypeId, label: "Bronze Tinted", fill: "rgba(120,80,30,0.38)", stroke: "rgba(180,130,60,0.5)" },
-  { id: "frosted" as GlassTypeId, label: "Frosted", fill: "rgba(210,225,235,0.48)", stroke: "rgba(210,225,235,0.6)" },
-  { id: "reflective" as GlassTypeId, label: "Reflective", fill: "rgba(80,100,120,0.52)", stroke: "rgba(140,170,200,0.5)" },
+  {
+    id: "clear" as GlassTypeId,
+    label: "Clear Glass",
+    fill: "rgba(180,215,240,0.18)",
+    stroke: "rgba(180,215,240,0.5)",
+  },
+  {
+    id: "blue-tint" as GlassTypeId,
+    label: "Blue Tinted",
+    fill: "rgba(37,99,235,0.32)",
+    stroke: "rgba(96,165,250,0.5)",
+  },
+  {
+    id: "bronze-tint" as GlassTypeId,
+    label: "Bronze Tinted",
+    fill: "rgba(120,80,30,0.38)",
+    stroke: "rgba(180,130,60,0.5)",
+  },
+  {
+    id: "frosted" as GlassTypeId,
+    label: "Frosted",
+    fill: "rgba(210,225,235,0.48)",
+    stroke: "rgba(210,225,235,0.6)",
+  },
+  {
+    id: "reflective" as GlassTypeId,
+    label: "Reflective",
+    fill: "rgba(80,100,120,0.52)",
+    stroke: "rgba(140,170,200,0.5)",
+  },
 ];
 
 const SERIES = [
@@ -57,7 +107,15 @@ const ACP_FINISHES = [
 ];
 
 // ─── Selector Button ──────────────────────────────────────────────────────────
-function Chip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function Chip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
   return (
     <button
       onClick={onClick}
@@ -73,28 +131,42 @@ function Chip({ active, onClick, children }: { active: boolean; onClick: () => v
 }
 
 // ─── Color Swatch ─────────────────────────────────────────────────────────────
-function Swatch({ hex, active, label, onClick }: { hex: string; active: boolean; label: string; onClick: () => void }) {
+function Swatch({
+  hex,
+  active,
+  label,
+  onClick,
+}: {
+  hex: string;
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
   return (
-    <button
-      title={label}
-      onClick={onClick}
-      className="relative flex-shrink-0 group"
-    >
+    <button title={label} onClick={onClick} className="relative flex-shrink-0 group">
       <div
         className={`w-8 h-8 rounded-full border-2 transition-all duration-200 ${
-          active ? "border-accent scale-110 ring-2 ring-accent/30" : "border-border/40 hover:border-border hover:scale-105"
+          active
+            ? "border-accent scale-110 ring-2 ring-accent/30"
+            : "border-border/40 hover:border-border hover:scale-105"
         }`}
         style={{ backgroundColor: hex }}
       />
-      {active && (
-        <Check className="absolute inset-0 m-auto w-3.5 h-3.5 text-accent drop-shadow" />
-      )}
+      {active && <Check className="absolute inset-0 m-auto w-3.5 h-3.5 text-accent drop-shadow" />}
     </button>
   );
 }
 
 // ─── Accordion Panel ──────────────────────────────────────────────────────────
-function Panel({ title, children, defaultOpen = false }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+function Panel({
+  title,
+  children,
+  defaultOpen = false,
+}: {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="glass rounded-xl border border-border overflow-hidden">
@@ -102,8 +174,12 @@ function Panel({ title, children, defaultOpen = false }: { title: string; childr
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center justify-between px-5 py-3.5 text-left"
       >
-        <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">{title}</span>
-        <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+        <span className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-medium">
+          {title}
+        </span>
+        <ChevronDown
+          className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        />
       </button>
       {open && <div className="px-5 pb-4">{children}</div>}
     </div>
@@ -150,35 +226,41 @@ export function ProductVisualizer() {
       <div className="relative mx-auto max-w-7xl px-6 lg:px-10">
         {/* Header */}
         <div className="max-w-2xl mb-14">
-          <div className="text-xs uppercase tracking-[0.25em] text-accent mb-4">Interactive 3D Customizer</div>
+          <div className="text-xs uppercase tracking-[0.25em] text-accent mb-4">
+            Interactive 3D Customizer
+          </div>
           <h2 className="text-4xl lg:text-5xl font-semibold tracking-tight">
-            Visualize &amp; customize your{" "}
-            <span className="text-silver">perfect product</span>
+            Visualize &amp; customize your <span className="text-silver">perfect product</span>
           </h2>
           <p className="mt-5 text-muted-foreground text-lg leading-relaxed">
-            Configure your setup, rotate and zoom in photorealistic 3D, and see profile materials rendering live.
-            Toggle animations to interact, then send your configuration directly to our team on WhatsApp.
+            Configure your setup, rotate and zoom in photorealistic 3D, and see profile materials
+            rendering live. Toggle animations to interact, then send your configuration directly to
+            our team on WhatsApp.
           </p>
         </div>
 
         {/* Product tabs */}
         <div className="flex flex-wrap gap-2 mb-10">
-          {PRODUCTS.map((p) => (
-            <button
-              key={p.id}
-              onClick={() => {
-                setProduct(p.id);
-                setIsOpen(false); // Reset animation state on change
-              }}
-              className={`px-5 py-2.5 rounded-lg text-sm font-medium border transition-all duration-200 ${
-                product === p.id
-                  ? "bg-accent/20 border-accent/60 text-accent shadow-glow"
-                  : "glass border-border/40 text-muted-foreground hover:text-foreground hover:border-border"
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
+          {PRODUCTS.map((p) => {
+            const Icon = p.icon;
+            return (
+              <button
+                key={p.id}
+                onClick={() => {
+                  setProduct(p.id);
+                  setIsOpen(false); // Reset animation state on change
+                }}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium border transition-all duration-200 ${
+                  product === p.id
+                    ? "bg-accent/20 border-accent/60 text-accent shadow-glow"
+                    : "glass border-border/40 text-muted-foreground hover:text-foreground hover:border-border"
+                }`}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                {p.label}
+              </button>
+            );
+          })}
         </div>
 
         <div className="grid lg:grid-cols-[300px_1fr_300px] gap-6 items-start">
@@ -187,7 +269,13 @@ export function ProductVisualizer() {
             <Panel title="Frame / Profile Colour" defaultOpen>
               <div className="flex flex-wrap gap-2 mt-1">
                 {FRAME_COLORS.map((c) => (
-                  <Swatch key={c.id} hex={c.hex} active={frameColor === c.id} label={c.label} onClick={() => setFrameColor(c.id)} />
+                  <Swatch
+                    key={c.id}
+                    hex={c.hex}
+                    active={frameColor === c.id}
+                    label={c.label}
+                    onClick={() => setFrameColor(c.id)}
+                  />
                 ))}
               </div>
               <p className="mt-3 text-xs text-muted-foreground">{frame.label}</p>
@@ -219,7 +307,13 @@ export function ProductVisualizer() {
               <Panel title="ACP Finish" defaultOpen>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {ACP_FINISHES.map((a) => (
-                    <Swatch key={a.id} hex={a.hex} active={acpFinish === a.id} label={a.label} onClick={() => setACPFinish(a.id)} />
+                    <Swatch
+                      key={a.id}
+                      hex={a.hex}
+                      active={acpFinish === a.id}
+                      label={a.label}
+                      onClick={() => setACPFinish(a.id)}
+                    />
                   ))}
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground">{acp.label}</p>
@@ -231,7 +325,9 @@ export function ProductVisualizer() {
           <div className="relative glass rounded-2xl border border-border/60 flex flex-col items-center justify-center min-h-[460px] overflow-hidden">
             {/* Ambient glow */}
             <div className="absolute inset-0 bg-gradient-to-br from-accent/4 via-transparent to-transparent pointer-events-none rounded-2xl" />
-            <div className="absolute top-3 left-4 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50 z-10">Live 3D Preview</div>
+            <div className="absolute top-3 left-4 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/50 z-10">
+              Live 3D Preview
+            </div>
 
             {/* Open / Close overlay button */}
             {interactable && (
@@ -239,7 +335,9 @@ export function ProductVisualizer() {
                 onClick={() => setIsOpen(!isOpen)}
                 className="absolute top-3 right-4 z-10 px-3.5 py-1.5 rounded-lg text-[11px] font-semibold border glass border-border/60 text-foreground hover:text-accent hover:border-accent/40 hover:scale-105 transition-smooth flex items-center gap-1.5"
               >
-                <span className={`w-2 h-2 rounded-full ${isOpen ? "bg-accent animate-pulse" : "bg-muted-foreground/60"}`} />
+                <span
+                  className={`w-2 h-2 rounded-full ${isOpen ? "bg-accent animate-pulse" : "bg-muted-foreground/60"}`}
+                />
                 {isOpen ? "Close Opening" : "Test Opening Style"}
               </button>
             )}
@@ -308,7 +406,9 @@ export function ProductVisualizer() {
 
             {/* Config Summary */}
             <div className="glass rounded-xl border border-border p-4 space-y-2.5">
-              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">Your Configuration</div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mb-1">
+                Your Configuration
+              </div>
               {[
                 ["Product", prod.label],
                 ["Frame", frame.label, frame.hex],

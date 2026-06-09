@@ -48,7 +48,7 @@ export const submitAdminRequest = createServerFn({ method: "POST" })
           status: "pending",
           updated_at: new Date().toISOString(),
         },
-        { onConflict: "user_id" }
+        { onConflict: "user_id" },
       )
       .select()
       .single();
@@ -140,12 +140,10 @@ export const approveAdminRequest = createServerFn({ method: "POST" })
 
     if (!existingRole) {
       console.log("User does not have admin role. Inserting 'admin' role in user_roles...");
-      const { error: roleErr } = await supabaseAdmin
-        .from("user_roles")
-        .insert({
-          user_id: request.user_id,
-          role: "admin",
-        });
+      const { error: roleErr } = await supabaseAdmin.from("user_roles").insert({
+        user_id: request.user_id,
+        role: "admin",
+      });
 
       if (roleErr) {
         console.error("Grant role error:", roleErr);

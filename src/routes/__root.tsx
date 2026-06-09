@@ -10,6 +10,8 @@ import {
 
 import appCss from "../styles.css?url";
 import { Toaster } from "sonner";
+import { GlowCursor } from "@/components/site/GlowCursor";
+import { VfxBackground } from "@/components/site/VfxBackground";
 
 function NotFoundComponent() {
   return (
@@ -74,15 +76,27 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "arm Edifice" },
-      { name: "description", content: "ARM Edifice Designer creates premium, modern websites for aluminium and facade solutions companies." },
+      {
+        name: "description",
+        content:
+          "ARM Edifice Designer creates premium, modern websites for aluminium and facade solutions companies.",
+      },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "arm Edifice" },
-      { property: "og:description", content: "ARM Edifice Designer creates premium, modern websites for aluminium and facade solutions companies." },
+      {
+        property: "og:description",
+        content:
+          "ARM Edifice Designer creates premium, modern websites for aluminium and facade solutions companies.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "arm Edifice" },
-      { name: "twitter:description", content: "ARM Edifice Designer creates premium, modern websites for aluminium and facade solutions companies." },
+      {
+        name: "twitter:description",
+        content:
+          "ARM Edifice Designer creates premium, modern websites for aluminium and facade solutions companies.",
+      },
     ],
     links: [
       {
@@ -116,6 +130,8 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <VfxBackground />
+      <GlowCursor />
       <Outlet />
       <Toaster theme="dark" position="bottom-right" richColors />
     </QueryClientProvider>

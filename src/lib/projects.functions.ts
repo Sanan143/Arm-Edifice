@@ -20,6 +20,7 @@ export interface Project {
   year: number;
   img: string;
   img_before?: string | null;
+  additional_images?: string[] | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -32,6 +33,7 @@ const projectSchema = z.object({
   year: z.number().int().min(2000).max(2050),
   img: z.string().trim().url().max(2000),
   img_before: z.string().trim().url().max(2000).optional().nullable(),
+  additional_images: z.array(z.string().trim().url().max(2000)).optional().nullable(),
 });
 
 // ─── Public: list all projects ───────────────────────────────────────────────
@@ -74,6 +76,7 @@ export const addProject = createServerFn({ method: "POST" })
         year: data.year,
         img: data.img,
         img_before: data.img_before,
+        additional_images: data.additional_images,
       })
       .select()
       .single();
@@ -86,9 +89,7 @@ export const addProject = createServerFn({ method: "POST" })
 
 export const updateProject = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) =>
-    z.object({ id: z.string().uuid() }).merge(projectSchema).parse(input)
-  )
+  .inputValidator((input) => z.object({ id: z.string().uuid() }).merge(projectSchema).parse(input))
   .handler(async ({ data, context }) => {
     const { data: roleData, error: roleErr } = await supabaseAdmin
       .from("user_roles")
@@ -132,10 +133,7 @@ export const deleteProject = createServerFn({ method: "POST" })
       throw new Error("Forbidden");
     }
 
-    const { error } = await supabaseAdmin
-      .from("projects")
-      .delete()
-      .eq("id", data.id);
+    const { error } = await supabaseAdmin.from("projects").delete().eq("id", data.id);
 
     if (error) throw new Error(error.message);
     return { ok: true };

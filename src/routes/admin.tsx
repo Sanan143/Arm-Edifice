@@ -47,13 +47,19 @@ type Lead = {
   created_at: string;
 };
 
+type AdminRequest = {
+  id: string;
+  email: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+};
+
 export const Route = createFileRoute("/admin")({
   component: AdminPage,
   head: () => ({
-    meta: [
-      { title: "Admin — ARM Edifice" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Admin — ARM Edifice" }, { name: "robots", content: "noindex" }],
   }),
 });
 
@@ -76,8 +82,10 @@ function AdminPage() {
   const [activeTab, setActiveTab] = useState<"leads" | "projects" | "requests">("leads");
 
   // Admin approval requests state
-  const [adminRequests, setAdminRequests] = useState<any[]>([]);
-  const [myRequestStatus, setMyRequestStatus] = useState<"none" | "pending" | "approved" | "rejected">("none");
+  const [adminRequests, setAdminRequests] = useState<AdminRequest[]>([]);
+  const [myRequestStatus, setMyRequestStatus] = useState<
+    "none" | "pending" | "approved" | "rejected"
+  >("none");
   const [submittingRequest, setSubmittingRequest] = useState(false);
 
   // Projects state
@@ -105,6 +113,12 @@ function AdminPage() {
   const [imageBeforeTab, setImageBeforeTab] = useState<"upload" | "url">("upload");
   const [dragOverBefore, setDragOverBefore] = useState(false);
   const fileInputBeforeRef = useRef<HTMLInputElement>(null);
+
+  // Additional on-site photos states
+  const [additionalImages, setAdditionalImages] = useState<string[]>([]);
+  const [uploadingAdditional, setUploadingAdditional] = useState(false);
+  const [dragOverAdditional, setDragOverAdditional] = useState(false);
+  const fileInputAdditionalRef = useRef<HTMLInputElement>(null);
 
   const stockImages = [
     {
@@ -161,9 +175,7 @@ function AdminPage() {
         .from("project-images")
         .upload(fileName, file, { cacheControl: "3600", upsert: false });
       if (uploadError) throw uploadError;
-      const { data } = supabase.storage
-        .from("project-images")
-        .getPublicUrl(fileName);
+      const { data } = supabase.storage.from("project-images").getPublicUrl(fileName);
       if (target === "after") {
         setImgUrl(data.publicUrl);
       } else {
@@ -178,6 +190,43 @@ function AdminPage() {
       } else {
         setUploadingBefore(false);
       }
+    }
+  }, []);
+
+  const handleMultipleFilesUpload = useCallback(async (files: FileList | File[]) => {
+    if (!files || files.length === 0) return;
+    setUploadingAdditional(true);
+    let successCount = 0;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const allowed = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+      if (!allowed.includes(file.type)) {
+        toast.error(`Only JPEG, PNG, WebP, or GIF images are allowed. Skipped ${file.name}`);
+        continue;
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error(`File size must be under 10 MB. Skipped ${file.name}`);
+        continue;
+      }
+      try {
+        const ext = file.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("project-images")
+          .upload(fileName, file, { cacheControl: "3600", upsert: false });
+        if (uploadError) throw uploadError;
+        const { data } = supabase.storage.from("project-images").getPublicUrl(fileName);
+        setAdditionalImages((prev) => [...prev, data.publicUrl]);
+        successCount++;
+      } catch (e) {
+        toast.error(
+          `Failed to upload ${file.name}: ${e instanceof Error ? e.message : "Unknown error"}`,
+        );
+      }
+    }
+    setUploadingAdditional(false);
+    if (successCount > 0) {
+      toast.success(`Uploaded ${successCount} additional image(s) successfully!`);
     }
   }, []);
 
@@ -205,7 +254,7 @@ function AdminPage() {
         if (!isAdmin) {
           const { status } = await requestStatus();
           if (mounted) {
-            setMyRequestStatus(status as any);
+            setMyRequestStatus(status as "none" | "pending" | "approved" | "rejected");
             setState("denied");
           }
           return;
@@ -222,9 +271,7 @@ function AdminPage() {
         setState("ready");
       } catch (e) {
         console.error("Failed to load admin panel details:", e);
-        toast.error(
-          e instanceof Error ? e.message : "Failed to load admin panel"
-        );
+        toast.error(e instanceof Error ? e.message : "Failed to load admin panel");
         if (mounted) {
           // If we fail because of auth or initialization, let's redirect to login safely
           navigate({ to: "/login" });
@@ -285,6 +332,7 @@ function AdminPage() {
     setImageTab("upload");
     setImgBeforeUrl("");
     setImageBeforeTab("upload");
+    setAdditionalImages([]);
     setIsModalOpen(true);
   };
 
@@ -298,7 +346,12 @@ function AdminPage() {
     setImgUrl(proj.img);
     setImageTab(proj.img.startsWith("http") && proj.img.includes("unsplash") ? "url" : "upload");
     setImgBeforeUrl(proj.img_before || "");
-    setImageBeforeTab(proj.img_before && proj.img_before.startsWith("http") && proj.img_before.includes("unsplash") ? "url" : "upload");
+    setImageBeforeTab(
+      proj.img_before && proj.img_before.startsWith("http") && proj.img_before.includes("unsplash")
+        ? "url"
+        : "upload",
+    );
+    setAdditionalImages(proj.additional_images || []);
     setIsModalOpen(true);
   };
 
@@ -331,6 +384,7 @@ function AdminPage() {
       year: Number(year),
       img: imgUrl || stockImages[0].url,
       img_before: imgBeforeUrl.trim() || null,
+      additional_images: additionalImages,
     };
 
     setSaving(true);
@@ -368,9 +422,7 @@ function AdminPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-6 font-sans">
         <div className="glass rounded-2xl p-10 max-w-md w-full text-center border border-border/80 shadow-elegant">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Access Denied
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Access Denied</h1>
           <p className="mt-3 text-muted-foreground text-sm leading-relaxed">
             Your account does not have administrator privileges yet.
           </p>
@@ -405,7 +457,8 @@ function AdminPage() {
                   Pending Approval
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Your request has been submitted. Please wait for an existing admin to review and approve it.
+                  Your request has been submitted. Please wait for an existing admin to review and
+                  approve it.
                 </p>
               </div>
             )}
@@ -486,9 +539,7 @@ function AdminPage() {
         {/* Tabs */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10 border-b border-border/40 pb-6">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Management Suite
-            </h1>
+            <h1 className="text-3xl font-bold tracking-tight">Management Suite</h1>
             <p className="text-sm text-muted-foreground mt-1">
               Control your business inquiries and public portfolio
             </p>
@@ -513,9 +564,7 @@ function AdminPage() {
                   ? "bg-gradient-silver text-jet shadow-elegant"
                   : "text-muted-foreground hover:text-foreground"
               }`}
-              style={
-                activeTab === "projects" ? { color: "var(--jet)" } : undefined
-              }
+              style={activeTab === "projects" ? { color: "var(--jet)" } : undefined}
             >
               <Briefcase className="w-4 h-4" />
               <span>Projects Portfolio ({projectsList.length})</span>
@@ -527,9 +576,7 @@ function AdminPage() {
                   ? "bg-gradient-silver text-jet shadow-elegant"
                   : "text-muted-foreground hover:text-foreground"
               }`}
-              style={
-                activeTab === "requests" ? { color: "var(--jet)" } : undefined
-              }
+              style={activeTab === "requests" ? { color: "var(--jet)" } : undefined}
             >
               <Users className="w-4 h-4 text-accent" />
               <span>
@@ -556,10 +603,7 @@ function AdminPage() {
                 </thead>
                 <tbody className="divide-y divide-border/40">
                   {leads.map((l) => (
-                    <tr
-                      key={l.id}
-                      className="hover:bg-secondary/20 transition-smooth"
-                    >
+                    <tr key={l.id} className="hover:bg-secondary/20 transition-smooth">
                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">
                         {new Date(l.created_at).toLocaleDateString(undefined, {
                           month: "short",
@@ -567,9 +611,7 @@ function AdminPage() {
                           year: "numeric",
                         })}
                       </td>
-                      <td className="px-6 py-4 font-medium text-foreground">
-                        {l.name}
-                      </td>
+                      <td className="px-6 py-4 font-medium text-foreground">{l.name}</td>
                       <td className="px-6 py-4">
                         <a
                           href={`tel:${l.phone}`}
@@ -583,9 +625,7 @@ function AdminPage() {
                           {l.project_type || "General Inquiry"}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-muted-foreground">
-                        {l.city || "—"}
-                      </td>
+                      <td className="px-6 py-4 text-muted-foreground">{l.city || "—"}</td>
                       <td className="px-6 py-4 text-muted-foreground max-w-sm whitespace-pre-wrap leading-relaxed">
                         {l.message || "—"}
                       </td>
@@ -593,15 +633,10 @@ function AdminPage() {
                   ))}
                   {leads.length === 0 && (
                     <tr>
-                      <td
-                        colSpan={6}
-                        className="px-6 py-16 text-center text-muted-foreground"
-                      >
+                      <td colSpan={6} className="px-6 py-16 text-center text-muted-foreground">
                         <div className="flex flex-col items-center gap-2">
                           <Users className="w-8 h-8 text-muted-foreground/60" />
-                          <span className="font-medium">
-                            No leads have requested quotes yet.
-                          </span>
+                          <span className="font-medium">No leads have requested quotes yet.</span>
                         </div>
                       </td>
                     </tr>
@@ -623,9 +658,8 @@ function AdminPage() {
                   Admin-Only: Portfolio Management
                 </p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Projects added here are saved to the database and
-                  immediately visible on the public portfolio page. Only admins
-                  can add, edit or delete projects.
+                  Projects added here are saved to the database and immediately visible on the
+                  public portfolio page. Only admins can add, edit or delete projects.
                 </p>
               </div>
               <button
@@ -651,8 +685,7 @@ function AdminPage() {
                         alt={p.title}
                         className="w-full h-full object-cover transition-smooth group-hover:scale-105"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src =
-                            stockImages[0].url;
+                          (e.target as HTMLImageElement).src = stockImages[0].url;
                         }}
                       />
                       <span className="absolute top-3 right-3 text-xs font-semibold bg-jet/80 text-accent px-2.5 py-1 rounded-full backdrop-blur-sm border border-accent/30">
@@ -665,9 +698,7 @@ function AdminPage() {
                       )}
                     </div>
                     <div className="p-5 space-y-3">
-                      <h3 className="font-bold text-lg text-foreground line-clamp-1">
-                        {p.title}
-                      </h3>
+                      <h3 className="font-bold text-lg text-foreground line-clamp-1">{p.title}</h3>
                       <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed min-h-[40px]">
                         {p.scope}
                       </p>
@@ -712,9 +743,7 @@ function AdminPage() {
                 <div className="col-span-full py-16 text-center text-muted-foreground border border-dashed border-border/80 rounded-xl glass">
                   <div className="flex flex-col items-center gap-2">
                     <Briefcase className="w-8 h-8 text-muted-foreground/60" />
-                    <span className="font-medium">
-                      No projects in portfolio yet.
-                    </span>
+                    <span className="font-medium">No projects in portfolio yet.</span>
                     <button
                       onClick={handleOpenAddModal}
                       className="mt-2 text-sm text-accent hover:underline"
@@ -743,10 +772,7 @@ function AdminPage() {
                 </thead>
                 <tbody className="divide-y divide-border/40">
                   {adminRequests.map((r) => (
-                    <tr
-                      key={r.id}
-                      className="hover:bg-secondary/20 transition-smooth"
-                    >
+                    <tr key={r.id} className="hover:bg-secondary/20 transition-smooth">
                       <td className="px-6 py-4 text-muted-foreground whitespace-nowrap">
                         {new Date(r.created_at).toLocaleDateString(undefined, {
                           month: "short",
@@ -754,17 +780,17 @@ function AdminPage() {
                           year: "numeric",
                         })}
                       </td>
-                      <td className="px-6 py-4 font-medium text-foreground">
-                        {r.email}
-                      </td>
+                      <td className="px-6 py-4 font-medium text-foreground">{r.email}</td>
                       <td className="px-6 py-4">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                          r.status === "pending"
-                            ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                            : r.status === "approved"
-                            ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                            : "bg-destructive/10 text-destructive border-destructive/20"
-                        }`}>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                            r.status === "pending"
+                              ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                              : r.status === "approved"
+                                ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                                : "bg-destructive/10 text-destructive border-destructive/20"
+                          }`}
+                        >
                           {r.status.toUpperCase()}
                         </span>
                       </td>
@@ -785,22 +811,19 @@ function AdminPage() {
                             </button>
                           </div>
                         ) : (
-                          <span className="text-xs text-muted-foreground font-medium">Reviewed</span>
+                          <span className="text-xs text-muted-foreground font-medium">
+                            Reviewed
+                          </span>
                         )}
                       </td>
                     </tr>
                   ))}
                   {adminRequests.length === 0 && (
                     <tr>
-                      <td
-                        colSpan={4}
-                        className="px-6 py-16 text-center text-muted-foreground"
-                      >
+                      <td colSpan={4} className="px-6 py-16 text-center text-muted-foreground">
                         <div className="flex flex-col items-center gap-2">
                           <Users className="w-8 h-8 text-muted-foreground/60" />
-                          <span className="font-medium">
-                            No admin access requests yet.
-                          </span>
+                          <span className="font-medium">No admin access requests yet.</span>
                         </div>
                       </td>
                     </tr>
@@ -818,11 +841,7 @@ function AdminPage() {
               <div className="flex items-center justify-between px-6 py-5 border-b border-border/60">
                 <h2 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
                   <Briefcase className="w-5 h-5 text-accent" />
-                  <span>
-                    {editingProject
-                      ? "Modify Project"
-                      : "Add Project to Portfolio"}
-                  </span>
+                  <span>{editingProject ? "Modify Project" : "Add Project to Portfolio"}</span>
                 </h2>
                 <button
                   onClick={() => setIsModalOpen(false)}
@@ -856,9 +875,7 @@ function AdminPage() {
                     </label>
                     <select
                       value={category}
-                      onChange={(e) =>
-                        setCategory(e.target.value as ProjectCategory)
-                      }
+                      onChange={(e) => setCategory(e.target.value as ProjectCategory)}
                       className="w-full rounded-lg border border-border/80 bg-background px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent transition-smooth"
                     >
                       {projectCategories
@@ -959,7 +976,10 @@ function AdminPage() {
                       {/* Drag-and-drop zone */}
                       <div
                         onClick={() => !uploading && fileInputRef.current?.click()}
-                        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setDragOver(true);
+                        }}
                         onDragLeave={() => setDragOver(false)}
                         onDrop={(e) => {
                           e.preventDefault();
@@ -971,8 +991,8 @@ function AdminPage() {
                           dragOver
                             ? "border-accent bg-accent/10"
                             : uploading
-                            ? "border-border/40 bg-secondary/10 cursor-not-allowed"
-                            : "border-border/60 hover:border-accent/60 hover:bg-accent/5"
+                              ? "border-border/40 bg-secondary/10 cursor-not-allowed"
+                              : "border-border/60 hover:border-accent/60 hover:bg-accent/5"
                         }`}
                       >
                         {uploading ? (
@@ -982,11 +1002,15 @@ function AdminPage() {
                           </>
                         ) : (
                           <>
-                            <UploadCloud className={`w-8 h-8 transition-smooth ${dragOver ? "text-accent" : "text-muted-foreground/60"}`} />
+                            <UploadCloud
+                              className={`w-8 h-8 transition-smooth ${dragOver ? "text-accent" : "text-muted-foreground/60"}`}
+                            />
                             <p className="text-sm font-medium text-foreground">
                               {dragOver ? "Drop to upload" : "Click or drag & drop"}
                             </p>
-                            <p className="text-xs text-muted-foreground">JPEG, PNG, WebP · Max 10 MB</p>
+                            <p className="text-xs text-muted-foreground">
+                              JPEG, PNG, WebP · Max 10 MB
+                            </p>
                           </>
                         )}
                       </div>
@@ -1019,7 +1043,9 @@ function AdminPage() {
                         className="w-full rounded-lg border border-border/80 bg-background px-3.5 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent transition-smooth"
                       />
                       <div className="space-y-1.5">
-                        <span className="text-xs text-muted-foreground">Or pick a premium stock image:</span>
+                        <span className="text-xs text-muted-foreground">
+                          Or pick a premium stock image:
+                        </span>
                         <div className="flex flex-wrap gap-1.5">
                           {stockImages.map((img) => (
                             <button
@@ -1042,11 +1068,11 @@ function AdminPage() {
 
                   {/* Live preview (always shown when a URL is set) */}
                   {imgUrl && (
-                    <div className="rounded-lg overflow-hidden border border-border/60 aspect-video bg-secondary/20">
+                    <div className="rounded-lg overflow-hidden border border-border/60 bg-secondary/20 flex items-center justify-center p-2 min-h-[200px]">
                       <img
                         src={imgUrl}
                         alt="Preview"
-                        className="w-full h-full object-cover"
+                        className="max-h-64 max-w-full rounded-md object-contain"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = "none";
                         }}
@@ -1108,7 +1134,10 @@ function AdminPage() {
                       {/* Drag-and-drop zone */}
                       <div
                         onClick={() => !uploadingBefore && fileInputBeforeRef.current?.click()}
-                        onDragOver={(e) => { e.preventDefault(); setDragOverBefore(true); }}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setDragOverBefore(true);
+                        }}
                         onDragLeave={() => setDragOverBefore(false)}
                         onDrop={(e) => {
                           e.preventDefault();
@@ -1120,8 +1149,8 @@ function AdminPage() {
                           dragOverBefore
                             ? "border-accent bg-accent/10"
                             : uploadingBefore
-                            ? "border-border/40 bg-secondary/10 cursor-not-allowed"
-                            : "border-border/60 hover:border-accent/60 hover:bg-accent/5"
+                              ? "border-border/40 bg-secondary/10 cursor-not-allowed"
+                              : "border-border/60 hover:border-accent/60 hover:bg-accent/5"
                         }`}
                       >
                         {uploadingBefore ? (
@@ -1131,11 +1160,15 @@ function AdminPage() {
                           </>
                         ) : (
                           <>
-                            <UploadCloud className={`w-8 h-8 transition-smooth ${dragOverBefore ? "text-accent" : "text-muted-foreground/60"}`} />
+                            <UploadCloud
+                              className={`w-8 h-8 transition-smooth ${dragOverBefore ? "text-accent" : "text-muted-foreground/60"}`}
+                            />
                             <p className="text-sm font-medium text-foreground">
                               {dragOverBefore ? "Drop to upload" : "Click or drag & drop"}
                             </p>
-                            <p className="text-xs text-muted-foreground">JPEG, PNG, WebP · Max 10 MB</p>
+                            <p className="text-xs text-muted-foreground">
+                              JPEG, PNG, WebP · Max 10 MB
+                            </p>
                           </>
                         )}
                       </div>
@@ -1172,15 +1205,114 @@ function AdminPage() {
 
                   {/* Live preview */}
                   {imgBeforeUrl && (
-                    <div className="rounded-lg overflow-hidden border border-border/60 aspect-video bg-secondary/20">
+                    <div className="rounded-lg overflow-hidden border border-border/60 bg-secondary/20 flex items-center justify-center p-2 min-h-[200px]">
                       <img
                         src={imgBeforeUrl}
                         alt="Before Preview"
-                        className="w-full h-full object-cover"
+                        className="max-h-64 max-w-full rounded-md object-contain"
                         onError={(e) => {
                           (e.target as HTMLImageElement).style.display = "none";
                         }}
                       />
+                    </div>
+                  )}
+                </div>
+
+                {/* Additional Photos — Optional, Multiple Uploads */}
+                <div className="space-y-3 pt-2 border-t border-border/40">
+                  <label className="block text-sm font-medium text-muted-foreground flex items-center justify-between">
+                    <span className="flex items-center gap-1">
+                      <ImageIcon className="w-4 h-4 text-accent" />
+                      <span>Additional On-Site Photos (Optional)</span>
+                    </span>
+                    {additionalImages.length > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        {additionalImages.length} image(s) uploaded
+                      </span>
+                    )}
+                  </label>
+
+                  {/* Drag-and-drop zone for multiple files */}
+                  <div
+                    onClick={() => !uploadingAdditional && fileInputAdditionalRef.current?.click()}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setDragOverAdditional(true);
+                    }}
+                    onDragLeave={() => setDragOverAdditional(false)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      setDragOverAdditional(false);
+                      const files = e.dataTransfer.files;
+                      if (files) handleMultipleFilesUpload(files);
+                    }}
+                    className={`relative flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed py-8 px-4 cursor-pointer transition-smooth ${
+                      dragOverAdditional
+                        ? "border-accent bg-accent/10"
+                        : uploadingAdditional
+                          ? "border-border/40 bg-secondary/10 cursor-not-allowed"
+                          : "border-border/60 hover:border-accent/60 hover:bg-accent/5"
+                    }`}
+                  >
+                    {uploadingAdditional ? (
+                      <>
+                        <Loader2 className="w-8 h-8 text-accent animate-spin" />
+                        <p className="text-xs text-muted-foreground">Uploading images…</p>
+                      </>
+                    ) : (
+                      <>
+                        <UploadCloud
+                          className={`w-8 h-8 transition-smooth ${dragOverAdditional ? "text-accent" : "text-muted-foreground/60"}`}
+                        />
+                        <p className="text-sm font-medium text-foreground">
+                          {dragOverAdditional
+                            ? "Drop to upload"
+                            : "Click or drag & drop multiple files"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          JPEG, PNG, WebP · Max 10 MB each
+                        </p>
+                      </>
+                    )}
+                  </div>
+                  <input
+                    ref={fileInputAdditionalRef}
+                    type="file"
+                    multiple
+                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    className="hidden"
+                    onChange={(e) => {
+                      const files = e.target.files;
+                      if (files) handleMultipleFilesUpload(files);
+                      e.target.value = "";
+                    }}
+                  />
+
+                  {/* Image Grid Preview with delete action */}
+                  {additionalImages.length > 0 && (
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      {additionalImages.map((url, idx) => (
+                        <div
+                          key={idx}
+                          className="relative group aspect-square rounded-lg overflow-hidden border border-border/60 bg-secondary/20 flex items-center justify-center p-1"
+                        >
+                          <img
+                            src={url}
+                            alt={`Additional ${idx + 1}`}
+                            className="max-w-full max-h-full w-auto h-auto object-contain"
+                          />
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setAdditionalImages((prev) => prev.filter((_, i) => i !== idx))
+                            }
+                            className="absolute top-1 right-1 p-1 bg-red-500/80 hover:bg-red-600 text-white rounded-full transition-smooth opacity-0 group-hover:opacity-100 shadow-sm"
+                            aria-label="Remove image"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>

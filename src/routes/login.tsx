@@ -5,7 +5,9 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
-  head: () => ({ meta: [{ title: "Admin Login — ARM Edifice" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({
+    meta: [{ title: "Admin Login — ARM Edifice" }, { name: "robots", content: "noindex" }],
+  }),
 });
 
 function LoginPage() {
@@ -43,14 +45,21 @@ function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-hero px-6">
       <div className="w-full max-w-md glass rounded-2xl p-10 shadow-elegant">
-        <Link to="/" className="text-xs uppercase tracking-[0.25em] text-muted-foreground hover:text-accent">
+        <Link
+          to="/"
+          className="text-xs uppercase tracking-[0.25em] text-muted-foreground hover:text-accent"
+        >
           ← Back to site
         </Link>
-        <h1 className="mt-4 text-3xl font-semibold tracking-tight">Admin {mode === "signin" ? "Sign In" : "Sign Up"}</h1>
+        <h1 className="mt-4 text-3xl font-semibold tracking-tight">
+          Admin {mode === "signin" ? "Sign In" : "Sign Up"}
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">ARM Edifice control panel.</p>
         <form onSubmit={onSubmit} className="mt-8 space-y-5">
           <div>
-            <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Email</label>
+            <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              Email
+            </label>
             <input
               type="email"
               required
@@ -60,7 +69,9 @@ function LoginPage() {
             />
           </div>
           <div>
-            <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Password</label>
+            <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+              Password
+            </label>
             <input
               type="password"
               required

@@ -21,7 +21,10 @@ interface ThreeVisualizerProps {
 }
 
 // ─── Config Colors ────────────────────────────────────────────────────────────
-const FRAME_COLORS: Record<FrameColorId, { hex: number; metalness: number; roughness: number; label: string }> = {
+const FRAME_COLORS: Record<
+  FrameColorId,
+  { hex: number; metalness: number; roughness: number; label: string }
+> = {
   silver: { hex: 0xa8b0bc, metalness: 0.95, roughness: 0.22, label: "Anodized Silver" },
   black: { hex: 0x1c1c1e, metalness: 0.8, roughness: 0.45, label: "Matte Black" },
   bronze: { hex: 0x7a5c2e, metalness: 0.88, roughness: 0.3, label: "Warm Bronze" },
@@ -29,12 +32,57 @@ const FRAME_COLORS: Record<FrameColorId, { hex: number; metalness: number; rough
   champagne: { hex: 0xc9a84c, metalness: 0.92, roughness: 0.24, label: "Champagne Gold" },
 };
 
-const GLASS_TYPES: Record<GlassTypeId, { hex: number; transmission: number; opacity: number; roughness: number; metalness: number; ior: number }> = {
-  clear: { hex: 0xb4d7f0, transmission: 0.95, opacity: 0.2, roughness: 0.05, metalness: 0.1, ior: 1.5 },
-  "blue-tint": { hex: 0x1d4ed8, transmission: 0.75, opacity: 0.45, roughness: 0.05, metalness: 0.15, ior: 1.52 },
-  "bronze-tint": { hex: 0x6b441e, transmission: 0.7, opacity: 0.5, roughness: 0.05, metalness: 0.15, ior: 1.52 },
-  frosted: { hex: 0xd2e2ee, transmission: 0.35, opacity: 0.85, roughness: 0.65, metalness: 0.1, ior: 1.48 },
-  reflective: { hex: 0x475569, transmission: 0.3, opacity: 0.75, roughness: 0.02, metalness: 0.95, ior: 1.6 },
+const GLASS_TYPES: Record<
+  GlassTypeId,
+  {
+    hex: number;
+    transmission: number;
+    opacity: number;
+    roughness: number;
+    metalness: number;
+    ior: number;
+  }
+> = {
+  clear: {
+    hex: 0xb4d7f0,
+    transmission: 0.95,
+    opacity: 0.2,
+    roughness: 0.05,
+    metalness: 0.1,
+    ior: 1.5,
+  },
+  "blue-tint": {
+    hex: 0x1d4ed8,
+    transmission: 0.75,
+    opacity: 0.45,
+    roughness: 0.05,
+    metalness: 0.15,
+    ior: 1.52,
+  },
+  "bronze-tint": {
+    hex: 0x6b441e,
+    transmission: 0.7,
+    opacity: 0.5,
+    roughness: 0.05,
+    metalness: 0.15,
+    ior: 1.52,
+  },
+  frosted: {
+    hex: 0xd2e2ee,
+    transmission: 0.35,
+    opacity: 0.85,
+    roughness: 0.65,
+    metalness: 0.1,
+    ior: 1.48,
+  },
+  reflective: {
+    hex: 0x475569,
+    transmission: 0.3,
+    opacity: 0.75,
+    roughness: 0.02,
+    metalness: 0.95,
+    ior: 1.6,
+  },
 };
 
 const ACP_FINISHES: Record<ACPFinishId, { hex: number; metalness: number; roughness: number }> = {
@@ -86,7 +134,11 @@ export function ThreeVisualizer({
     const camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 100);
     camera.position.set(0, 0, 4.5);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: false,
+      powerPreference: "high-performance",
+    });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
@@ -205,11 +257,19 @@ export function ThreeVisualizer({
     };
 
     // ─── Model Construction logic ─────────────────────────────────────────────
-    let activeModelGroup = new THREE.Group();
+    const activeModelGroup = new THREE.Group();
     scene.add(activeModelGroup);
 
     // Helper to extrude/build clean boxes
-    const createBox = (w: number, h: number, d: number, mat: THREE.Material, x = 0, y = 0, z = 0) => {
+    const createBox = (
+      w: number,
+      h: number,
+      d: number,
+      mat: THREE.Material,
+      x = 0,
+      y = 0,
+      z = 0,
+    ) => {
       const geo = new THREE.BoxGeometry(w, h, d);
       const mesh = new THREE.Mesh(geo, mat);
       mesh.position.set(x, y, z);
@@ -241,15 +301,57 @@ export function ThreeVisualizer({
         // 1. Outer Frame (Top, Bottom, Left, Right)
         const outerFrame = new THREE.Group();
         // Top
-        outerFrame.add(createBox(wWidth, profileW, profileD, mats.frameMaterial, 0, wHeight / 2 - profileW / 2, 0));
+        outerFrame.add(
+          createBox(
+            wWidth,
+            profileW,
+            profileD,
+            mats.frameMaterial,
+            0,
+            wHeight / 2 - profileW / 2,
+            0,
+          ),
+        );
         // Bottom
-        outerFrame.add(createBox(wWidth, profileW, profileD, mats.frameMaterial, 0, -wHeight / 2 + profileW / 2, 0));
+        outerFrame.add(
+          createBox(
+            wWidth,
+            profileW,
+            profileD,
+            mats.frameMaterial,
+            0,
+            -wHeight / 2 + profileW / 2,
+            0,
+          ),
+        );
         // Left
-        outerFrame.add(createBox(profileW, wHeight - 2 * profileW, profileD, mats.frameMaterial, -wWidth / 2 + profileW / 2, 0, 0));
+        outerFrame.add(
+          createBox(
+            profileW,
+            wHeight - 2 * profileW,
+            profileD,
+            mats.frameMaterial,
+            -wWidth / 2 + profileW / 2,
+            0,
+            0,
+          ),
+        );
         // Right
-        outerFrame.add(createBox(profileW, wHeight - 2 * profileW, profileD, mats.frameMaterial, wWidth / 2 - profileW / 2, 0, 0));
+        outerFrame.add(
+          createBox(
+            profileW,
+            wHeight - 2 * profileW,
+            profileD,
+            mats.frameMaterial,
+            wWidth / 2 - profileW / 2,
+            0,
+            0,
+          ),
+        );
         // Middle Mullion
-        outerFrame.add(createBox(profileW, wHeight - 2 * profileW, profileD, mats.frameMaterial, 0, 0, 0));
+        outerFrame.add(
+          createBox(profileW, wHeight - 2 * profileW, profileD, mats.frameMaterial, 0, 0, 0),
+        );
         activeModelGroup.add(outerFrame);
 
         // 2. Left Pane (Casement/Tilt or Fixed)
@@ -263,12 +365,38 @@ export function ThreeVisualizer({
         const sW = 0.04; // sash profile width
 
         // Inner sash frame
-        innerLeft.add(createBox(innerW, sW, profileD * 0.8, mats.frameMaterial, 0, innerH / 2 - sW / 2, 0));
-        innerLeft.add(createBox(innerW, sW, profileD * 0.8, mats.frameMaterial, 0, -innerH / 2 + sW / 2, 0));
-        innerLeft.add(createBox(sW, innerH - 2 * sW, profileD * 0.8, mats.frameMaterial, -innerW / 2 + sW / 2, 0, 0));
-        innerLeft.add(createBox(sW, innerH - 2 * sW, profileD * 0.8, mats.frameMaterial, innerW / 2 - sW / 2, 0, 0));
+        innerLeft.add(
+          createBox(innerW, sW, profileD * 0.8, mats.frameMaterial, 0, innerH / 2 - sW / 2, 0),
+        );
+        innerLeft.add(
+          createBox(innerW, sW, profileD * 0.8, mats.frameMaterial, 0, -innerH / 2 + sW / 2, 0),
+        );
+        innerLeft.add(
+          createBox(
+            sW,
+            innerH - 2 * sW,
+            profileD * 0.8,
+            mats.frameMaterial,
+            -innerW / 2 + sW / 2,
+            0,
+            0,
+          ),
+        );
+        innerLeft.add(
+          createBox(
+            sW,
+            innerH - 2 * sW,
+            profileD * 0.8,
+            mats.frameMaterial,
+            innerW / 2 - sW / 2,
+            0,
+            0,
+          ),
+        );
         // Glass
-        innerLeft.add(createBox(innerW - sW * 2, innerH - sW * 2, 0.015, mats.glassMaterial, 0, 0, 0));
+        innerLeft.add(
+          createBox(innerW - sW * 2, innerH - sW * 2, 0.015, mats.glassMaterial, 0, 0, 0),
+        );
 
         // Add sash handle
         if (opening === "casement" || opening === "tilt-turn") {
@@ -291,36 +419,92 @@ export function ThreeVisualizer({
 
         const innerRight = new THREE.Group();
         // Inner sash frame
-        innerRight.add(createBox(innerW, sW, profileD * 0.8, mats.frameMaterial, 0, innerH / 2 - sW / 2, 0));
-        innerRight.add(createBox(innerW, sW, profileD * 0.8, mats.frameMaterial, 0, -innerH / 2 + sW / 2, 0));
-        innerRight.add(createBox(sW, innerH - 2 * sW, profileD * 0.8, mats.frameMaterial, -innerW / 2 + sW / 2, 0, 0));
-        innerRight.add(createBox(sW, innerH - 2 * sW, profileD * 0.8, mats.frameMaterial, innerW / 2 - sW / 2, 0, 0));
+        innerRight.add(
+          createBox(innerW, sW, profileD * 0.8, mats.frameMaterial, 0, innerH / 2 - sW / 2, 0),
+        );
+        innerRight.add(
+          createBox(innerW, sW, profileD * 0.8, mats.frameMaterial, 0, -innerH / 2 + sW / 2, 0),
+        );
+        innerRight.add(
+          createBox(
+            sW,
+            innerH - 2 * sW,
+            profileD * 0.8,
+            mats.frameMaterial,
+            -innerW / 2 + sW / 2,
+            0,
+            0,
+          ),
+        );
+        innerRight.add(
+          createBox(
+            sW,
+            innerH - 2 * sW,
+            profileD * 0.8,
+            mats.frameMaterial,
+            innerW / 2 - sW / 2,
+            0,
+            0,
+          ),
+        );
         // Glass
-        innerRight.add(createBox(innerW - sW * 2, innerH - sW * 2, 0.015, mats.glassMaterial, 0, 0, 0));
+        innerRight.add(
+          createBox(innerW - sW * 2, innerH - sW * 2, 0.015, mats.glassMaterial, 0, 0, 0),
+        );
 
         // Slider latch
         if (opening === "sliding") {
-          const latch = createBox(0.015, 0.1, 0.015, mats.handleMaterial, -innerW / 2 + 0.04, 0, profileD * 0.4);
+          const latch = createBox(
+            0.015,
+            0.1,
+            0.015,
+            mats.handleMaterial,
+            -innerW / 2 + 0.04,
+            0,
+            profileD * 0.4,
+          );
           innerRight.add(latch);
         }
 
         rightPaneGroup.add(innerRight);
         activeModelGroup.add(rightPaneGroup);
         objectsRef.current.windowRightPane = rightPaneGroup;
-      } 
-      
-      else if (product === "door") {
+      } else if (product === "door") {
         // DOOR DIMENSIONS: W=1.3, H=2.3
         const dW = 1.3;
         const dH = 2.3;
 
         // Outer Frame jambs (Left, Right, Top)
         const outerJamb = new THREE.Group();
-        outerJamb.add(createBox(dW, profileW, profileD, mats.frameMaterial, 0, dH / 2 - profileW / 2, 0));
-        outerJamb.add(createBox(profileW, dH - profileW, profileD, mats.frameMaterial, -dW / 2 + profileW / 2, -profileW / 2, 0));
-        outerJamb.add(createBox(profileW, dH - profileW, profileD, mats.frameMaterial, dW / 2 - profileW / 2, -profileW / 2, 0));
+        outerJamb.add(
+          createBox(dW, profileW, profileD, mats.frameMaterial, 0, dH / 2 - profileW / 2, 0),
+        );
+        outerJamb.add(
+          createBox(
+            profileW,
+            dH - profileW,
+            profileD,
+            mats.frameMaterial,
+            -dW / 2 + profileW / 2,
+            -profileW / 2,
+            0,
+          ),
+        );
+        outerJamb.add(
+          createBox(
+            profileW,
+            dH - profileW,
+            profileD,
+            mats.frameMaterial,
+            dW / 2 - profileW / 2,
+            -profileW / 2,
+            0,
+          ),
+        );
         // Sleek floor sill
-        outerJamb.add(createBox(dW, 0.02, profileD * 0.9, mats.frameMaterial, 0, -dH / 2 + 0.01, 0));
+        outerJamb.add(
+          createBox(dW, 0.02, profileD * 0.9, mats.frameMaterial, 0, -dH / 2 + 0.01, 0),
+        );
         activeModelGroup.add(outerJamb);
 
         // Door leaf (Swinging around hinge side x = -dW/2 + profileW)
@@ -336,9 +520,39 @@ export function ThreeVisualizer({
 
         // Door leaf perimeter sash
         leafSub.add(createBox(lW, sW, profileD * 0.85, mats.frameMaterial, 0, lH / 2 - sW / 2, 0)); // Top
-        leafSub.add(createBox(lW, sW * 1.5, profileD * 0.85, mats.frameMaterial, 0, -lH / 2 + (sW * 1.5) / 2, 0)); // Bottom kick plate
-        leafSub.add(createBox(sW, lH - sW * 2.5, profileD * 0.85, mats.frameMaterial, -lW / 2 + sW / 2, sW * 0.25, 0)); // Left sash
-        leafSub.add(createBox(sW, lH - sW * 2.5, profileD * 0.85, mats.frameMaterial, lW / 2 - sW / 2, sW * 0.25, 0)); // Right sash
+        leafSub.add(
+          createBox(
+            lW,
+            sW * 1.5,
+            profileD * 0.85,
+            mats.frameMaterial,
+            0,
+            -lH / 2 + (sW * 1.5) / 2,
+            0,
+          ),
+        ); // Bottom kick plate
+        leafSub.add(
+          createBox(
+            sW,
+            lH - sW * 2.5,
+            profileD * 0.85,
+            mats.frameMaterial,
+            -lW / 2 + sW / 2,
+            sW * 0.25,
+            0,
+          ),
+        ); // Left sash
+        leafSub.add(
+          createBox(
+            sW,
+            lH - sW * 2.5,
+            profileD * 0.85,
+            mats.frameMaterial,
+            lW / 2 - sW / 2,
+            sW * 0.25,
+            0,
+          ),
+        ); // Right sash
 
         // Middle horizontal transom
         const transY = -0.15;
@@ -370,9 +584,7 @@ export function ThreeVisualizer({
         leafGroup.add(leafSub);
         activeModelGroup.add(leafGroup);
         objectsRef.current.doorLeaf = leafGroup;
-      } 
-      
-      else if (product === "acp") {
+      } else if (product === "acp") {
         // ACP FACADE PANEL SYSTEM (3x3 grid layout)
         const gridGroup = new THREE.Group();
         const pW = 0.75;
@@ -394,19 +606,33 @@ export function ThreeVisualizer({
 
             // Inner trim joint backing line
             if (col < 1) {
-              const verticalGroove = createBox(gap, 1.8, 0.01, mats.frameMaterial, x + pW / 2 + gap / 2, 0, -0.01);
+              const verticalGroove = createBox(
+                gap,
+                1.8,
+                0.01,
+                mats.frameMaterial,
+                x + pW / 2 + gap / 2,
+                0,
+                -0.01,
+              );
               gridGroup.add(verticalGroove);
             }
             if (row < 1) {
-              const horizontalGroove = createBox(2.4, gap, 0.01, mats.frameMaterial, 0, y + pH / 2 + gap / 2, -0.01);
+              const horizontalGroove = createBox(
+                2.4,
+                gap,
+                0.01,
+                mats.frameMaterial,
+                0,
+                y + pH / 2 + gap / 2,
+                -0.01,
+              );
               gridGroup.add(horizontalGroove);
             }
           }
         }
         activeModelGroup.add(gridGroup);
-      } 
-      
-      else if (product === "curtain-wall") {
+      } else if (product === "curtain-wall") {
         // MODERN ARCHITECTURAL FACADE GRID (4 cols x 3 rows)
         const gridW = 2.4;
         const gridH = 2.0;
@@ -433,15 +659,21 @@ export function ThreeVisualizer({
           for (let r = 0; r < rows; r++) {
             const x = -gridW / 2 + c * stepX + stepX / 2;
             const y = -gridH / 2 + r * stepY + stepY / 2;
-            const pane = createBox(stepX - 0.04, stepY - 0.04, 0.02, mats.glassMaterial, x, y, 0.025);
+            const pane = createBox(
+              stepX - 0.04,
+              stepY - 0.04,
+              0.02,
+              mats.glassMaterial,
+              x,
+              y,
+              0.025,
+            );
             cwGroup.add(pane);
           }
         }
 
         activeModelGroup.add(cwGroup);
-      } 
-      
-      else if (product === "partition") {
+      } else if (product === "partition") {
         // COMMERCIAL SLIM PARTITION WALL WITH A SWING GLASS DOOR
         const pW = 2.8;
         const pH = 2.2;
@@ -453,16 +685,22 @@ export function ThreeVisualizer({
         // Top ceiling track
         partGroup.add(createBox(pW, trackH, trackD, mats.frameMaterial, 0, pH / 2 - trackH / 2, 0));
         // Floor track
-        partGroup.add(createBox(pW, trackH, trackD, mats.frameMaterial, 0, -pH / 2 + trackH / 2, 0));
+        partGroup.add(
+          createBox(pW, trackH, trackD, mats.frameMaterial, 0, -pH / 2 + trackH / 2, 0),
+        );
 
         // Fixed sidelight glass panels (Left side x = -0.95, and Right side x = 0.95)
         const sideW = 0.85;
         const glassH = pH - trackH * 2;
         // Left glass
-        partGroup.add(createBox(sideW, glassH, 0.015, mats.glassMaterial, -pW / 2 + sideW / 2, 0, 0));
+        partGroup.add(
+          createBox(sideW, glassH, 0.015, mats.glassMaterial, -pW / 2 + sideW / 2, 0, 0),
+        );
         partGroup.add(createBox(0.02, glassH, trackD, mats.frameMaterial, -pW / 2 + sideW, 0, 0)); // slim vertical mullion
         // Right glass
-        partGroup.add(createBox(sideW, glassH, 0.015, mats.glassMaterial, pW / 2 - sideW / 2, 0, 0));
+        partGroup.add(
+          createBox(sideW, glassH, 0.015, mats.glassMaterial, pW / 2 - sideW / 2, 0, 0),
+        );
         partGroup.add(createBox(0.02, glassH, trackD, mats.frameMaterial, pW / 2 - sideW, 0, 0)); // slim vertical mullion
 
         // Center glass swing door (door fits between mullions)
@@ -475,8 +713,28 @@ export function ThreeVisualizer({
         // Glass door pane
         doorLeaf.add(createBox(doorW, glassH - 0.02, 0.015, mats.glassMaterial, 0, 0, 0));
         // Top and bottom chrome patch fittings
-        doorLeaf.add(createBox(0.18, 0.06, 0.025, mats.handleMaterial, -doorW / 2 + 0.09, glassH / 2 - 0.04, 0));
-        doorLeaf.add(createBox(0.18, 0.06, 0.025, mats.handleMaterial, -doorW / 2 + 0.09, -glassH / 2 + 0.04, 0));
+        doorLeaf.add(
+          createBox(
+            0.18,
+            0.06,
+            0.025,
+            mats.handleMaterial,
+            -doorW / 2 + 0.09,
+            glassH / 2 - 0.04,
+            0,
+          ),
+        );
+        doorLeaf.add(
+          createBox(
+            0.18,
+            0.06,
+            0.025,
+            mats.handleMaterial,
+            -doorW / 2 + 0.09,
+            -glassH / 2 + 0.04,
+            0,
+          ),
+        );
 
         // High-end stainless steel vertical door pull bar
         const pullBar = new THREE.Group();
@@ -514,7 +772,11 @@ export function ThreeVisualizer({
         if (opening === "sliding") {
           // Slide right pane sideways
           const target = isOpen ? -0.4 : 0.0;
-          animRef.current.slidingProgress = THREE.MathUtils.lerp(animRef.current.slidingProgress, target, lerpSpeed);
+          animRef.current.slidingProgress = THREE.MathUtils.lerp(
+            animRef.current.slidingProgress,
+            target,
+            lerpSpeed,
+          );
           if (objectsRef.current.windowRightPane) {
             objectsRef.current.windowRightPane.position.x = 0.45 + animRef.current.slidingProgress;
           }
@@ -526,7 +788,11 @@ export function ThreeVisualizer({
           // Swing left pane open outward (around vertical left edge y-axis)
           // Since hinge is at left edge relative to pivot group
           const targetRot = isOpen ? -Math.PI / 2.8 : 0;
-          animRef.current.swingProgress = THREE.MathUtils.lerp(animRef.current.swingProgress, targetRot, lerpSpeed);
+          animRef.current.swingProgress = THREE.MathUtils.lerp(
+            animRef.current.swingProgress,
+            targetRot,
+            lerpSpeed,
+          );
           if (objectsRef.current.windowLeftPane) {
             // Apply swing around left hinge
             objectsRef.current.windowLeftPane.rotation.y = animRef.current.swingProgress;
@@ -538,7 +804,11 @@ export function ThreeVisualizer({
         } else if (opening === "tilt-turn") {
           // Tilt left pane inward from the bottom
           const targetTilt = isOpen ? Math.PI / 18 : 0;
-          animRef.current.tiltProgress = THREE.MathUtils.lerp(animRef.current.tiltProgress, targetTilt, lerpSpeed);
+          animRef.current.tiltProgress = THREE.MathUtils.lerp(
+            animRef.current.tiltProgress,
+            targetTilt,
+            lerpSpeed,
+          );
           if (objectsRef.current.windowLeftPane) {
             objectsRef.current.windowLeftPane.rotation.x = animRef.current.tiltProgress;
           }
@@ -560,7 +830,11 @@ export function ThreeVisualizer({
       // Handle swing door opening
       else if (product === "door") {
         const targetRot = isOpen ? -Math.PI / 2.8 : 0;
-        animRef.current.swingProgress = THREE.MathUtils.lerp(animRef.current.swingProgress, targetRot, lerpSpeed);
+        animRef.current.swingProgress = THREE.MathUtils.lerp(
+          animRef.current.swingProgress,
+          targetRot,
+          lerpSpeed,
+        );
         if (objectsRef.current.doorLeaf) {
           objectsRef.current.doorLeaf.rotation.y = animRef.current.swingProgress;
         }
@@ -569,7 +843,11 @@ export function ThreeVisualizer({
       // Handle partition glass door opening
       else if (product === "partition") {
         const targetRot = isOpen ? Math.PI / 2.6 : 0; // Swing open inward/outward
-        animRef.current.swingProgress = THREE.MathUtils.lerp(animRef.current.swingProgress, targetRot, lerpSpeed);
+        animRef.current.swingProgress = THREE.MathUtils.lerp(
+          animRef.current.swingProgress,
+          targetRot,
+          lerpSpeed,
+        );
         if (objectsRef.current.partitionDoor) {
           objectsRef.current.partitionDoor.rotation.y = animRef.current.swingProgress;
         }
@@ -630,7 +908,10 @@ export function ThreeVisualizer({
   return (
     <div className="w-full h-full relative group">
       {/* Three.js viewport container */}
-      <div ref={containerRef} className="w-full h-full absolute inset-0 cursor-grab active:cursor-grabbing" />
+      <div
+        ref={containerRef}
+        className="w-full h-full absolute inset-0 cursor-grab active:cursor-grabbing"
+      />
 
       {/* Orbit control user tip */}
       <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-jet/80 backdrop-blur-md border border-border/50 text-[10px] text-muted-foreground/90 px-3 py-1 rounded-full pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">

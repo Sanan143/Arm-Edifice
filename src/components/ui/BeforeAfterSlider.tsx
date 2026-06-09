@@ -20,17 +20,23 @@ export function BeforeAfterSlider({ before, after, className = "" }: BeforeAfter
     setSliderPosition(position);
   }, []);
 
-  const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (!isDragging) return;
-    if (e.touches.length > 0) {
-      handleMove(e.touches[0].clientX);
-    }
-  }, [isDragging, handleMove]);
+  const handleTouchMove = useCallback(
+    (e: TouchEvent) => {
+      if (!isDragging) return;
+      if (e.touches.length > 0) {
+        handleMove(e.touches[0].clientX);
+      }
+    },
+    [isDragging, handleMove],
+  );
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging) return;
-    handleMove(e.clientX);
-  }, [isDragging, handleMove]);
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!isDragging) return;
+      handleMove(e.clientX);
+    },
+    [isDragging, handleMove],
+  );
 
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);

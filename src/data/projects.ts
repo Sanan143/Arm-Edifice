@@ -127,7 +127,7 @@ export function addStoredProject(project: Omit<Project, "id">): Project {
   const list = getStoredProjects();
   const newProject: Project = {
     ...project,
-    id: `project-${Date.now()}`
+    id: `project-${Date.now()}`,
   };
   list.push(newProject);
   saveStoredProjects(list);
@@ -136,7 +136,7 @@ export function addStoredProject(project: Omit<Project, "id">): Project {
 
 export function updateStoredProject(project: Project) {
   const list = getStoredProjects();
-  const index = list.findIndex(p => p.id === project.id);
+  const index = list.findIndex((p) => p.id === project.id);
   if (index !== -1) {
     list[index] = project;
     saveStoredProjects(list);
@@ -145,7 +145,7 @@ export function updateStoredProject(project: Project) {
 
 export function deleteStoredProject(id: string) {
   const list = getStoredProjects();
-  const filtered = list.filter(p => p.id !== id);
+  const filtered = list.filter((p) => p.id !== id);
   saveStoredProjects(filtered);
 }
 

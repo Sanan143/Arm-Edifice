@@ -42,13 +42,9 @@ export async function fetchAllProjects(): Promise<Project[]> {
 // ─── Admin: add a project ─────────────────────────────────────────────────────
 
 export async function createProject(
-  payload: Omit<Project, "id" | "created_at" | "updated_at">
+  payload: Omit<Project, "id" | "created_at" | "updated_at">,
 ): Promise<Project> {
-  const { data, error } = await supabase
-    .from("projects")
-    .insert(payload)
-    .select()
-    .single();
+  const { data, error } = await supabase.from("projects").insert(payload).select().single();
 
   if (error) throw new Error(error.message);
   return data as Project;
@@ -58,7 +54,7 @@ export async function createProject(
 
 export async function editProject(
   id: string,
-  payload: Partial<Omit<Project, "id" | "created_at" | "updated_at">>
+  payload: Partial<Omit<Project, "id" | "created_at" | "updated_at">>,
 ): Promise<Project> {
   const { data, error } = await supabase
     .from("projects")
@@ -74,10 +70,7 @@ export async function editProject(
 // ─── Admin: delete a project ──────────────────────────────────────────────────
 
 export async function removeProject(id: string): Promise<void> {
-  const { error } = await supabase
-    .from("projects")
-    .delete()
-    .eq("id", id);
+  const { error } = await supabase.from("projects").delete().eq("id", id);
 
   if (error) throw new Error(error.message);
 }
